@@ -143,4 +143,58 @@ describe('klei-migrate', function () {
       });
     });
   });
+
+  describe('dry()', function () {
+    beforeEach(loadMigrate);
+
+    beforeEach(function (done) {
+      migrate.cwd(__dirname);
+      done();
+    });
+
+    afterEach(removeMigrations);
+
+    it('should give an empty array when there is nothing to migrate', function (done) {
+      migrate.dry(function (toMigrate) {
+        toMigrate.should.be.empty;
+        done();
+      });
+    });
+
+    it('should give an array with what to migrate up by default', function (done) {
+      migrate.create(function (err, name1) {
+        migrate.create(function (err, name2) {
+          migrate.dry(function (toMigrate) {
+            toMigrate.should.not.be.empty;
+            toMigrate.length.should.equal(2);
+            toMigrate[0].should.equal(name1);
+            toMigrate[1].should.equal(name2);
+            done();
+          });
+        });
+      });
+    });
+
+    it('should give an array with what to migrate up for given migration name', function (done) {
+      migrate.create(function (err, name1) {
+        migrate.create(function (err, name2) {
+          migrate.dry(name1, function (toMigrate) {
+            toMigrate.should.not.be.empty;
+            toMigrate.length.should.equal(1);
+            toMigrate[0].should.equal(name1);
+            done();
+          });
+        });
+      });
+    });
+
+    it('should give an empty array for "down" direction when nothing has been migrated', function (done) {
+      migrate.create(function (err, name) {
+        migrate.dry('down', function (toMigrate) {
+          toMigrate.should.be.empty;
+          done();
+        });
+      });
+    });
+  });
 });
