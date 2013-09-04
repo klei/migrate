@@ -1,0 +1,197 @@
+#!/usr/bin/env node
+
+/**
+ * This is a SUPER-WORK-IN-PROGRESS...
+ * Almost not ready at all, but soon.
+ */
+
+var args = process.argv.slice(2),
+    fs = require('klei-fs'),
+    join = require('path').join,
+    basename = require('path').basename,
+    migrationsDir = join(process.cwd(), 'migrations');
+
+
+function ensureExistingMigrationsDir (dir, cb) {
+    fs.exists(dir, function (exists) {
+        if (!exists) {
+            fs.mkdirp(dir, function (err) {
+                if (err) {
+                    console.log('Could not create migrations dir: "' + dir + '"!');
+                    console.error(err);
+                    return;
+                }
+                cb();
+            });
+        } else {
+            cb();
+        }
+    });
+}
+
+switch (args.shift()) {
+    case 'new':
+        var migration = {
+            name: getNameFromArgs(args),
+            templateFile: join(process.cwd(), 'migration.tpl.js')
+        };
+
+        function getNameFromArgs (args) {
+            return +new Date + '_' + (args.join(' ').replace(/[\s\.]+/g, '_') || 'migration') + '.js'
+        }
+
+        function createMigration (dir, name, template) {
+            console.log('Creating ' + basename(dir) + '/' + name);
+
+            fs.writeFile(join(dir, name), template, 'utf8', function (err) {
+                if (err) {
+                    console.log('Creation failed!');
+                    console.error(err);
+                    return;
+                }
+                console.log('Success!');
+            });
+        }
+
+        function getTemplate (templateFile, cb) {
+            fs.exists(templateFile, function (exists) {
+                templateFile = exists ? templateFile : join(__dirname, '..', 'assets', 'migration.tpl.js');
+                fs.readFile(templateFile, 'utf8', function (err, template) {
+                    if (err) {
+                        console.error('No migration template found! Was looking for: ' + templateFile);
+                        return;
+                    }
+
+                    cb(template);
+                });
+            });
+        }
+
+        ensureExistingMigrationsDir(migrationsDir, function () {
+            getTemplate(migration.templateFile, function (template) {
+                createMigration(migrationsDir, migration.name, template);
+            });
+        });
+
+
+        break;
+    case 'run':
+        var isUp = args.indexOf('--up') >= 0 || args.indexOf('--down') == -1,
+            onlyStatus = args.indexOf('--status') >= 0;
+
+        function getPreviouslyMigrated (dir, cb) {
+            fs.readJson(join(dir, '.migrated.json'), function (err, migrated) {
+                if (err || !migrated) {
+                    cb({});
+                } else {
+                    cb(migrated);
+                }
+            });
+        }
+
+        function getMigrationFiles (dir, cb) {
+            fs.readdir(dir, function (err, files) {
+                if (err) {
+                    console.error('No migrations directory found!');
+                    return;
+                } else if (!files.length) {
+                    console.error('No migrations found!');
+                    return;
+                }
+
+                cb(files);
+            });
+        }
+
+        function getWhatToMigrate (migrations, migrated, cb) {
+            var files = migrations.filter(function (migration) {
+                return /^[0-9]{13}_.*\.js$/.test(migration) && (isUp && !!!migrated[migration] || !isUp && !!migrated[migration]);
+            });
+
+            files.sort();
+
+            if (!isUp) {
+                files.reverse();
+            }
+
+            cb(files);
+        }
+
+        function loadMigration (dir, migration) {
+            if (!migration) {
+                return null;
+            }
+            return require(join(dir, migration));
+        }
+
+        function getDirection (isUp) {
+            return isUp ? 'up' : 'down';
+        }
+
+        ensureExistingMigrationsDir(migrationsDir, function () {
+            getMigrationFiles(migrationsDir, function (migrations) {
+                getPreviouslyMigrated(migrationsDir, function (migrated) {
+                    getWhatToMigrate(migrations, migrated, function (files) {
+                        if (onlyStatus) {
+                            console.log('To migrate ' + getDirection(isUp), files);
+                            return;
+                        }
+
+                        function saveProgress (file) {
+                            if (!isUp && migrated[file]) {
+                                delete migrated[file];
+                            } else if (isUp) {
+                                migrated[file] = {migrated_at: new Date()};
+                            }
+                            fs.writeFile(join(migrationsDir, '.migrated.json'), JSON.stringify(migrated), 'utf8', function (err) {
+                                if (err) {
+                                    console.error('Could not save migration progress!', err);
+                                }
+                            });
+                        }
+
+                        function next (err, file) {
+                            if (err) {
+                                console.error('Damn, something went wrong!', err);
+                                return;
+                            }
+
+                            if (!file) {
+                                console.log('We are all done!');
+                                return;
+                            }
+
+                            var hasTimedout = false,
+                                timeoutId = setTimeout(function () {
+                                    hasTimedout = true;
+                                    next(new Error('Damn, that\'s slow! Timeout of 30 seconds exceeded...'));
+                                }, 30000);
+
+                            try {
+                                var migration = loadMigration(migrationsDir, file);
+                                console.log('Migrating: ' + file);
+                                migration[getDirection(isUp)](function (err) {
+                                    if (hasTimedout) {
+                                        return;
+                                    }
+                                    if (!err) {
+                                        saveProgress(file);
+                                    }
+                                    clearTimeout(timeoutId);
+                                    next(err, files.shift());
+                                });
+                            } catch (e) {
+                                next(e);
+                            }
+                        }
+
+                        next(null, files.shift());
+                    });
+                });
+            });
+        });
+        break;
+    default:
+        console.log('Nothing to do...');
+        break;
+}

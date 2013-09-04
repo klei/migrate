@@ -1,0 +1,22 @@
+{
+  "name": "klei-migrate",
+  "version": "0.1.0",
+  "description": "A migration tool... WIP",
+  "main": "index.js",
+  "dependencies": {
+    "klei-fs": "~0.4.2"
+  },
+  "devDependencies": {
+    "chai": "~1.7.2",
+    "mocha": "~1.12.1"
+  },
+  "scripts": {
+    "test": "node_modules/.bin/mocha -R spec tests/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/klei-dev/migrate"
+  },
+  "author": "Joakim Bengtson <joakim@klei.se>",
+  "license": "MIT"
+}
