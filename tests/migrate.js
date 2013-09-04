@@ -50,9 +50,8 @@ describe('klei-migrate', function () {
       done();
     });
 
-    it('should act as both a getter and a setter', function (done) {
-      migrate.cwd('tests').should.equal('tests');
-      migrate.cwd().should.equal('tests');
+    it('should act as both a getter and a setter (chainable)', function (done) {
+      migrate.cwd('tests').cwd().should.equal('tests');
       done();
     });
   });
@@ -144,6 +143,59 @@ describe('klei-migrate', function () {
     });
   });
 
+  describe('direction()', function () {
+    beforeEach(loadMigrate);
+
+    it('should default to "up"', function (done) {
+      migrate.direction().should.equal('up');
+      done();
+    });
+
+    it('should be able to set direction to "up"', function (done) {
+      migrate.direction('up').direction().should.equal('up');
+      done();
+    });
+
+    it('should be able to set direction to "down"', function (done) {
+      migrate.direction('down').direction().should.equal('down');
+      done();
+    });
+
+    it('should throw error for unknown direction', function (done) {
+      should.Throw(function () {
+        migrate.direction('sideways');
+      });
+      done();
+    });
+  });
+
+  describe('limit()', function () {
+    beforeEach(loadMigrate);
+
+    it('should default to 0', function (done) {
+      migrate.limit().should.equal(0);
+      done();
+    });
+
+    it('should be able to set direction to a integer', function (done) {
+      migrate.limit(4).limit().should.equal(4);
+      done();
+    });
+
+    it('should floor decimal numbers to integers', function (done) {
+      migrate.limit(4.34).limit().should.equal(4);
+      done();
+    });
+
+    it('should set limit to 0 if given something else than a number or a negative number', function (done) {
+      migrate.limit('lorem ipsum').limit().should.equal(0);
+      migrate.limit({}).limit().should.equal(0);
+      migrate.limit([]).limit().should.equal(0);
+      migrate.limit(-12).limit().should.equal(0);
+      done();
+    });
+  });
+
   describe('dry()', function () {
     beforeEach(loadMigrate);
 
@@ -175,6 +227,43 @@ describe('klei-migrate', function () {
       });
     });
 
+    it('should only give the next migration when limited and given no name', function (done) {
+      migrate.create(function (err, name1) {
+        migrate.create(function (err, name2) {
+          migrate.limit(1).dry(function (toMigrate) {
+            toMigrate.should.not.be.empty;
+            toMigrate.length.should.equal(1);
+            toMigrate[0].should.equal(name1);
+            done();
+          });
+        });
+      });
+    });
+
+    it('should only give one migration with given name when limited and migratable', function (done) {
+      migrate.create(function (err, name1) {
+        migrate.create(function (err, name2) {
+          migrate.limit(1).dry(name2, function (toMigrate) {
+            toMigrate.should.not.be.empty;
+            toMigrate.length.should.equal(1);
+            toMigrate[0].should.equal(name2);
+            done();
+          });
+        });
+      });
+    });
+
+    it('should give an empty array when given non-migratable name and limited', function (done) {
+      migrate.create(function (err, name1) {
+        migrate.create(function (err, name2) {
+          migrate.limit(1).dry('lorem-ipsum', function (toMigrate) {
+            toMigrate.should.be.empty;
+            done();
+          });
+        });
+      });
+    });
+
     it('should give an array with what to migrate up for given migration name', function (done) {
       migrate.create(function (err, name1) {
         migrate.create(function (err, name2) {
@@ -190,7 +279,7 @@ describe('klei-migrate', function () {
 
     it('should give an empty array for "down" direction when nothing has been migrated', function (done) {
       migrate.create(function (err, name) {
-        migrate.dry('down', function (toMigrate) {
+        migrate.direction('down').dry(function (toMigrate) {
           toMigrate.should.be.empty;
           done();
         });
