@@ -34,6 +34,12 @@ function removeMigrations (cb) {
   });
 }
 
+function resetJsonDb (cb) {
+  fs.writeFile(join(__dirname, 'db.json'), '{}', 'utf8', function (err) {
+    cb(err);
+  });
+}
+
 describe('klei-migrate', function () {
   describe('as a module', function () {
     it('should be requireable', function (done) {
@@ -90,7 +96,7 @@ describe('klei-migrate', function () {
     });
 
     it('should be able to set a new template', function (done) {
-      migrate.template('test.tpl.js', function (err, template) {
+      migrate.template('test.tpl', function (err, template) {
         should.not.exist(err);
         template.should.equal('/* test-template */\n');
         done();
@@ -98,7 +104,7 @@ describe('klei-migrate', function () {
     });
 
     it('should give an error when trying to set a non-existing template', function (done) {
-      migrate.template('myNonExistingTemplate.tpl.js', function (err, template) {
+      migrate.template('myNonExistingTemplate.tpl', function (err, template) {
         should.exist(err);
         should.not.exist(template);
         done();
@@ -282,6 +288,56 @@ describe('klei-migrate', function () {
         migrate.direction('down').dry(function (toMigrate) {
           toMigrate.should.be.empty;
           done();
+        });
+      });
+    });
+  });
+
+  describe('run()', function () {
+    beforeEach(loadMigrate);
+
+    beforeEach(function (done) {
+      migrate.cwd(__dirname);
+      done();
+    });
+
+    afterEach(removeMigrations);
+
+    afterEach(resetJsonDb);
+
+    it('should migrate existing migrations', function (done) {
+      migrate.template('table1.tpl', function (err) {
+        should.not.exist(err);
+        migrate.create('Add table1', function (err, name) {
+          should.not.exist(err);
+          migrate.run(function (err) {
+            should.not.exist(err);
+            fs.readJson(join(__dirname, 'db.json'), function (err, db) {
+              should.not.exist(err);
+              db.table1.length.should.equal(3);
+              done();
+            });
+          });
+        });
+      });
+    });
+
+    it('should be able to rollback (i.e. migrate down) migrated migrations', function (done) {
+      migrate.template('table1.tpl', function (err) {
+        should.not.exist(err);
+        migrate.create('Add table1', function (err, name) {
+          should.not.exist(err);
+          migrate.run(function (err) {
+            should.not.exist(err);
+            migrate.direction('down').run(function (err) {
+              should.not.exist(err);
+              fs.readJson(join(__dirname, 'db.json'), function (err, db) {
+                should.not.exist(err);
+                should.not.exist(db.table1);
+                done();
+              });
+            });
+          });
         });
       });
     });
