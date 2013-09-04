@@ -1,6 +1,6 @@
 {
   "name": "klei-migrate",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A migration tool... WIP",
   "main": "index.js",
   "dependencies": {
@@ -12,6 +12,9 @@
   },
   "scripts": {
     "test": "node_modules/.bin/mocha -R spec tests/"
+  },
+  "bin": {
+    "klei-migrate": "./bin/klei-migrate"
   },
   "repository": {
     "type": "git",
