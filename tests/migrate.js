@@ -322,6 +322,40 @@ describe('klei-migrate', function () {
       });
     });
 
+    it('should be able to migrate a migration by name', function (done) {
+      migrate.template('table1.tpl', function (err) {
+        should.not.exist(err);
+        migrate.create('Add table1', function (err, name) {
+          should.not.exist(err);
+          migrate.limit(1).run(name, function (err) {
+            should.not.exist(err);
+            fs.readJson(join(__dirname, 'db.json'), function (err, db) {
+              should.not.exist(err);
+              db.table1.length.should.equal(3);
+              done();
+            });
+          });
+        });
+      });
+    });
+
+    it('should not migrate anything if given a non-existing name with limit', function (done) {
+      migrate.template('table1.tpl', function (err) {
+        should.not.exist(err);
+        migrate.create('Add table1', function (err, name) {
+          should.not.exist(err);
+          migrate.limit(1).run('1313131313122_My_Non_Existing_Migration_Name.js', function (err) {
+            should.not.exist(err);
+            fs.readJson(join(__dirname, 'db.json'), function (err, db) {
+              should.not.exist(err);
+              should.not.exist(db.table1);
+              done();
+            });
+          });
+        });
+      });
+    });
+
     it('should be able to rollback (i.e. migrate down) migrated migrations', function (done) {
       migrate.template('table1.tpl', function (err) {
         should.not.exist(err);
