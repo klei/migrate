@@ -183,7 +183,7 @@ describe('klei-migrate', function () {
       done();
     });
 
-    it('should be able to set direction to a integer', function (done) {
+    it('should be able to set limit to a integer', function (done) {
       migrate.limit(4).limit().should.equal(4);
       done();
     });
@@ -198,6 +198,33 @@ describe('klei-migrate', function () {
       migrate.limit({}).limit().should.equal(0);
       migrate.limit([]).limit().should.equal(0);
       migrate.limit(-12).limit().should.equal(0);
+      done();
+    });
+  });
+
+  describe('timeout()', function () {
+    beforeEach(loadMigrate);
+
+    it('should default to 30000', function (done) {
+      migrate.timeout().should.equal(30000);
+      done();
+    });
+
+    it('should be able to set timeout to a integer', function (done) {
+      migrate.timeout(432).timeout().should.equal(432);
+      done();
+    });
+
+    it('should floor decimal numbers to integers', function (done) {
+      migrate.timeout(1234.34).timeout().should.equal(1234);
+      done();
+    });
+
+    it('should set timeout to 30000 if given something else than a number or a negative number', function (done) {
+      migrate.timeout('lorem ipsum').timeout().should.equal(30000);
+      migrate.timeout({}).timeout().should.equal(30000);
+      migrate.timeout([]).timeout().should.equal(30000);
+      migrate.timeout(-12).timeout().should.equal(30000);
       done();
     });
   });
@@ -371,6 +398,20 @@ describe('klei-migrate', function () {
                 done();
               });
             });
+          });
+        });
+      });
+    });
+
+    it('should give an error if the migration exceeds set time limit', function (done) {
+      migrate.template('timeout.tpl', function (err) {
+        should.not.exist(err);
+        migrate.create('Take time', function (err, name) {
+          should.not.exist(err);
+          migrate.timeout(30).run(function (err) {
+            should.exist(err);
+            err.message.should.equal('Timeout of 30 ms exceeded for migration: "' + name + '"');
+            done();
           });
         });
       });
