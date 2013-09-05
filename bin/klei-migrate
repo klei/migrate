@@ -10,7 +10,8 @@ var info = clc.blackBright,
     error = clc.red,
     ok = clc.green,
     commands = clc.greenBright,
-    switches = clc.blueBright;
+    switches = clc.blueBright,
+    arguments = clc.cyanBright;
 
 var args = process.argv.slice(2),
     migrate = require('../.');
@@ -63,14 +64,14 @@ switch (args.shift()) {
         }
         break;
     default:
-        console.log("Usage: klei-migrate " + commands("<command>") + " " + switches("[swithces]") );
+        console.log("Usage: klei-migrate " + commands("<command>") + " " + switches("[swithces]") + " " + arguments("(arguments)") );
         console.log();
-        console.log("   " + commands("new") + " " + "<migration name>");
+        console.log("   " + commands("new") + " " + arguments("(migration name)"));
         console.log();  
         console.log("   " + commands("run") + " " + switches("[switches]"));
         console.log("       " + switches("--up"))
         console.log("       " + switches("--down"))
-        console.log("       " + switches("--one") + "    " +info("Run only one migration up/down"));
+        console.log("       " + switches("--one") + "       " +info("Run only one migration up/down"));
         console.log("       " + switches("--status") + "    " + info("Lists what is going to be migrated"));
         console.log();
         break;
