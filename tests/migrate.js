@@ -377,8 +377,10 @@ describe('klei-migrate', function () {
         should.not.exist(err);
         migrate.create('Add table1', function (err, name) {
           should.not.exist(err);
-          migrate.run(function (err) {
+          migrate.run(function (err, migrated) {
             should.not.exist(err);
+            migrated.should.not.be.empty;
+            migrated[0].should.equal(name);
             fs.readJson(join(__dirname, 'db.json'), function (err, db) {
               should.not.exist(err);
               db.table1.length.should.equal(3);
