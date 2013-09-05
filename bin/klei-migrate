@@ -35,7 +35,7 @@ switch (c) {
         });
         break;
     case 'run':
-        var direction = argv.direction === up ? 'up' : 'down',
+        var direction = argv.down ? 'up' : 'down';
             one = argv.one
             dry = argv.dry
             name = argv._.join();
