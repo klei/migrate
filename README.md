@@ -2,7 +2,7 @@ klei-migrate
 ==================
 
 ```bash
-$ npm install -g http://github.com/klei-dev/migrate
+$ npm install -g klei-migrate
 ```
 
 ## Commands
