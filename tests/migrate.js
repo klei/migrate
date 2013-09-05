@@ -175,6 +175,33 @@ describe('klei-migrate', function () {
     });
   });
 
+  describe('directory()', function () {
+    beforeEach(loadMigrate);
+
+    it('should default to "<cwd>/migrations"', function (done) {
+      migrate.cwd(__dirname).directory().should.equal(join(__dirname, 'migrations'));
+      done();
+    });
+
+    it('should set directory in relation to cwd()', function (done) {
+      migrate.cwd(__dirname).directory('whatever').directory().should.equal(join(__dirname, 'whatever'));
+      done();
+    });
+
+    it('should throw error for a non string value', function (done) {
+      should.Throw(function () {
+        migrate.directory(['bad']);
+      });
+      should.Throw(function () {
+        migrate.directory(1212323);
+      });
+      should.Throw(function () {
+        migrate.directory({name: 'test'});
+      });
+      done();
+    });
+  });
+
   describe('limit()', function () {
     beforeEach(loadMigrate);
 
