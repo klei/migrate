@@ -13,17 +13,22 @@ function loadMigrate (cb) {
   cb && cb();
 }
 
-function removeMigrations (cb) {
-  var dir = join(__dirname, 'migrations');
+function removeMigrations (dir, cb) {
+  if (typeof dir === 'function') {
+    cb = dir;
+    dir = 'migrations';
+  }
+  dir = join(__dirname, dir);
   fs.readdir(dir, function (err, files) {
     if (err) {
       cb();
     } else {
+      var removed = 0;
       files.forEach(function (file, i) {
         fs.unlink(join(dir, file), function (err) {
           if (err) {
             cb(err);
-          } else if (i === files.length - 1) {
+          } else if (++removed === files.length) {
             fs.rmdir(dir, function (err) {
               cb(err);
             });
@@ -120,14 +125,22 @@ describe('klei-migrate', function () {
       done();
     });
 
-    afterEach(removeMigrations);
+    after(function (done) {
+      removeMigrations('migs', function (err) {
+        if (err) {
+          done(err);
+          return;
+        }
+        removeMigrations('migrations', done);
+      });
+    });
 
     describe('without arguments', function () {
-      it('should create <cwd>/migrations/<timestamp>_migration.js', function (done) {
-        migrate.create(function (err, name) {
+      it('should create <cwd>/<directory>/<timestamp>_migration.js', function (done) {
+        migrate.directory('migs').create(function (err, name) {
           should.not.exist(err);
           name.should.match(/^[0-9]{13}_migration.js$/);
-          fs.exists(join(__dirname, 'migrations', name), function (exists) {
+          fs.exists(join(__dirname, 'migs', name), function (exists) {
             exists.should.be.true;
             done();
           });
@@ -136,7 +149,7 @@ describe('klei-migrate', function () {
     });
 
     describe('with arguments', function () {
-      it('should create <cwd>/migrations/<timestamp>_<argument_snake_cased>.js', function (done) {
+      it('should create <cwd>/<directory>/<timestamp>_<argument_snake_cased>.js', function (done) {
         migrate.create('My Super Migration', function (err, name) {
           should.not.exist(err);
           name.should.match(/^[0-9]{13}_My_Super_Migration.js$/);
