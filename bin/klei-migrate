@@ -4,6 +4,13 @@
  * This is a SUPER-WORK-IN-PROGRESS...
  * Almost not ready at all, but soon.
  */
+var clc = require('cli-color');
+
+var info = clc.blackBright,
+    error = clc.red,
+    ok = clc.green,
+    commands = clc.greenBright,
+    switches = clc.blueBright;
 
 var args = process.argv.slice(2),
     migrate = require('../.');
@@ -15,7 +22,7 @@ switch (args.shift()) {
             if (err) {
                 console.error(err);
             } else {
-                console.log('Migration: "' + name + '" created!');
+                console.log(ok('Migration: "' + name + '" created!'));
             }
         });
         break;
@@ -37,24 +44,35 @@ switch (args.shift()) {
 
         if (dry) {
             migrate.dry(name, function (migratable) {
-                console.log('What to migrate ' + migrate.direction() + ':');
-                console.log(migratable);
+                console.log(info('Migrating' + " " + migrate.direction() + ":"));
+                console.log(info(migratable));
             });
         } else {
             migrate.run(name, function (err, migrated) {
                 if (migrated.length) {
-                    console.log('Migrated:', migrated);
+                    console.log(info('Migrated:', migrated));
                 }
                 if (err) {
-                    console.error('Migration failed!');
-                    console.error(err);
+                    console.error(error('Run failed!'));
+                    console.error(info(err.stack));
+                    process.exit(1);
                 } else {
-                    console.log('All done!');
+                    console.log(ok('All migrations run.'));
                 }
             });
         }
         break;
     default:
-        console.log('Nothing to do...');
+        console.log("Usage: klei-migrate " + commands("<command>") + " " + switches("[swithces]") );
+        console.log();
+        console.log("   " + commands("new") + " " + "<migration name>");
+        console.log();  
+        console.log("   " + commands("run") + " " + switches("[switches]"));
+        console.log("       " + switches("--up"))
+        console.log("       " + switches("--down"))
+        console.log("       " + switches("--one") + "    " +info("Run only one migration up/down"));
+        console.log("       " + switches("--status") + "    " + info("Lists what is going to be migrated"));
+        console.log();
         break;
+
 }
