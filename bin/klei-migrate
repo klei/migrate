@@ -4,22 +4,29 @@
  * This is a SUPER-WORK-IN-PROGRESS...
  * Almost not ready at all, but soon.
  */
-var clc = require('cli-color');
+var migrate = require('../.');
 
-var info = clc.blackBright,
+
+// Optimist argument handling
+var argv = require('optimist')
+    .boolean(['up', 'down', 'one', 'status'])
+    .argv;
+
+//Cli colouring
+var clc = require('cli-color'), 
+    info = clc.blackBright,
     error = clc.red,
     ok = clc.green,
     commands = clc.greenBright,
     switches = clc.blueBright,
     arguments = clc.cyanBright;
+ 
 
-var args = process.argv.slice(2),
-    migrate = require('../.');
-
-switch (args.shift()) {
+var c = argv._.splice(0,1)[0]
+switch (c) {
     case 'new':
     case 'create':
-        migrate.create(args.join(' '), function (err, name) {
+        migrate.create(argv._.join(' '), function (err, name) {
             if (err) {
                 console.error(err);
             } else {
@@ -28,10 +35,10 @@ switch (args.shift()) {
         });
         break;
     case 'run':
-        var direction = args.indexOf('--up') >= 0 || args.indexOf('--down') == -1 ? 'up' : 'down',
-            one = args.indexOf('--one') >= 0,
-            dry = args.indexOf('--status') >= 0,
-            name = args.pop();
+        var direction = argv.direction === up ? 'up' : 'down',
+            one = argv.one
+            dry = argv.dry
+            name = argv._.join();
 
         if (name && name.indexOf('-') === 0) {
             name = null;
