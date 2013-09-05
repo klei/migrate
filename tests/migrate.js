@@ -98,7 +98,7 @@ describe('klei-migrate', function () {
     it('should be able to set a new template', function (done) {
       migrate.template('test.tpl', function (err, template) {
         should.not.exist(err);
-        template.should.equal('/* test-template */\n');
+        template.trim().should.equal('/* test-template */');
         done();
       });
     });
