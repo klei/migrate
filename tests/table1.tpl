@@ -23,5 +23,6 @@ exports.down = function (next) {
       return;
     }
     delete db.tables.table1;
+    db.save(next);
   });
 };
