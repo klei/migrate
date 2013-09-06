@@ -4,26 +4,41 @@
  * This is a SUPER-WORK-IN-PROGRESS...
  * Almost not ready at all, but soon.
  */
+var migrate = require('../.');
 
-var args = process.argv.slice(2),
-    migrate = require('../.');
 
-switch (args.shift()) {
+// Optimist argument handling
+var argv = require('optimist')
+    .boolean(['up', 'down', 'one', 'status'])
+    .argv;
+
+//Cli colouring
+var clc = require('cli-color'), 
+    info = clc.blackBright,
+    error = clc.red,
+    ok = clc.green,
+    commands = clc.greenBright,
+    switches = clc.blueBright,
+    arguments = clc.cyanBright;
+ 
+
+var c = argv._.splice(0,1)[0]
+switch (c) {
     case 'new':
     case 'create':
-        migrate.create(args.join(' '), function (err, name) {
+        migrate.create(argv._.join(' '), function (err, name) {
             if (err) {
                 console.error(err);
             } else {
-                console.log('Migration: "' + name + '" created!');
+                console.log(ok('Migration: "' + name + '" created!'));
             }
         });
         break;
     case 'run':
-        var direction = args.indexOf('--up') >= 0 || args.indexOf('--down') == -1 ? 'up' : 'down',
-            one = args.indexOf('--one') >= 0,
-            dry = args.indexOf('--status') >= 0,
-            name = args.pop();
+        var direction = argv.down ? 'up' : 'down';
+            one = argv.one
+            dry = argv.dry
+            name = argv._.join();
 
         if (name && name.indexOf('-') === 0) {
             name = null;
@@ -37,24 +52,35 @@ switch (args.shift()) {
 
         if (dry) {
             migrate.dry(name, function (migratable) {
-                console.log('What to migrate ' + migrate.direction() + ':');
-                console.log(migratable);
+                console.log(info('Migrating' + " " + migrate.direction() + ":"));
+                console.log(info(migratable));
             });
         } else {
             migrate.run(name, function (err, migrated) {
                 if (migrated.length) {
-                    console.log('Migrated:', migrated);
+                    console.log(info('Migrated:', migrated));
                 }
                 if (err) {
-                    console.error('Migration failed!');
-                    console.error(err);
+                    console.error(error('Run failed!'));
+                    console.error(info(err.stack));
+                    process.exit(1);
                 } else {
-                    console.log('All done!');
+                    console.log(ok('All migrations run.'));
                 }
             });
         }
         break;
     default:
-        console.log('Nothing to do...');
+        console.log("Usage: klei-migrate " + commands("<command>") + " " + switches("[swithces]") + " " + arguments("(arguments)") );
+        console.log();
+        console.log("   " + commands("new") + " " + arguments("(migration name)"));
+        console.log();  
+        console.log("   " + commands("run") + " " + switches("[switches]"));
+        console.log("       " + switches("--up"))
+        console.log("       " + switches("--down"))
+        console.log("       " + switches("--one") + "       " +info("Run only one migration up/down"));
+        console.log("       " + switches("--status") + "    " + info("Lists what is going to be migrated"));
+        console.log();
         break;
+
 }
