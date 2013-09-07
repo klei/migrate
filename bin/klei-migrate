@@ -4,5 +4,5 @@ var cli = require('../lib/cli');
 
 cli.init().exec(function () {
     console.log(arguments);
+    process.exit();
 });
-process.exit();
