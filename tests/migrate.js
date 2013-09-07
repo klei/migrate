@@ -45,7 +45,7 @@ function resetJsonDb (cb) {
   });
 }
 
-describe('klei-migrate', function () {
+describe('klei-migrate module', function () {
   describe('as a module', function () {
     it('should be requireable', function (done) {
       should.not.Throw(loadMigrate);
@@ -67,6 +67,25 @@ describe('klei-migrate', function () {
     });
   });
 
+  describe('templatePath', function () {
+    beforeEach(loadMigrate);
+
+    beforeEach(function (done) {
+      migrate.cwd(__dirname);
+      done();
+    });
+
+    it('should use <klei-migrate-path>/assets/migration.tpl.js by default', function (done) {
+      migrate.templatePath().should.equal(join(__dirname, '..', 'assets', 'migration.tpl.js'));
+      done();
+    });
+
+    it('should set template path resolved from cwd', function (done) {
+      migrate.templatePath('table1.tpl').templatePath().should.equal(join(__dirname, 'table1.tpl'));
+      done();
+    });
+  });
+
   describe('template()', function () {
     beforeEach(loadMigrate);
 
@@ -75,7 +94,7 @@ describe('klei-migrate', function () {
       done();
     });
 
-    it('should get the current template', function (done) {
+    it('should get the template from current template path', function (done) {
       migrate.template(function (err, template) {
         should.not.exist(err);
         fs.readFile(join(__dirname, '..', 'assets', 'migration.tpl.js'), 'utf8', function (err, content) {
@@ -86,13 +105,6 @@ describe('klei-migrate', function () {
       });
     });
 
-    it('should throw an error when path is provided but no callback', function (done) {
-      should.Throw(function () {
-        migrate.template('test');
-      });
-      done();
-    });
-
     it('should throw an error when no arguments is provided', function (done) {
       should.Throw(function () {
         migrate.template();
@@ -101,7 +113,7 @@ describe('klei-migrate', function () {
     });
 
     it('should be able to set a new template', function (done) {
-      migrate.template('test.tpl', function (err, template) {
+      migrate.templatePath('test.tpl').template(function (err, template) {
         should.not.exist(err);
         template.trim().should.equal('/* test-template */');
         done();
@@ -109,7 +121,7 @@ describe('klei-migrate', function () {
     });
 
     it('should give an error when trying to set a non-existing template', function (done) {
-      migrate.template('myNonExistingTemplate.tpl', function (err, template) {
+      migrate.templatePath('myNonExistingTemplate.tpl').template(function (err, template) {
         should.exist(err);
         should.not.exist(template);
         done();
@@ -150,7 +162,7 @@ describe('klei-migrate', function () {
 
     describe('with arguments', function () {
       it('should create <cwd>/<directory>/<timestamp>_<argument_snake_cased>.js', function (done) {
-        migrate.create('My Super Migration', function (err, name) {
+        migrate.args(['My', 'Super', 'Migration']).create(function (err, name) {
           should.not.exist(err);
           name.should.match(/^[0-9]{13}_My_Super_Migration.js$/);
           fs.exists(join(__dirname, 'migrations', name), function (exists) {
@@ -288,7 +300,9 @@ describe('klei-migrate', function () {
 
     it('should give an array with what to migrate up by default', function (done) {
       migrate.create(function (err, name1) {
+        should.not.exist(err);
         migrate.create(function (err, name2) {
+          should.not.exist(err);
           migrate.dry(function (toMigrate) {
             toMigrate.should.not.be.empty;
             toMigrate.length.should.equal(2);
@@ -316,7 +330,7 @@ describe('klei-migrate', function () {
     it('should only give one migration with given name when limited and migratable', function (done) {
       migrate.create(function (err, name1) {
         migrate.create(function (err, name2) {
-          migrate.limit(1).dry(name2, function (toMigrate) {
+          migrate.limit(1).args([name2]).dry(function (toMigrate) {
             toMigrate.should.not.be.empty;
             toMigrate.length.should.equal(1);
             toMigrate[0].should.equal(name2);
@@ -329,7 +343,7 @@ describe('klei-migrate', function () {
     it('should give an empty array when given non-migratable name and limited', function (done) {
       migrate.create(function (err, name1) {
         migrate.create(function (err, name2) {
-          migrate.limit(1).dry('lorem-ipsum', function (toMigrate) {
+          migrate.limit(1).args(['lorem-ipsum']).dry(function (toMigrate) {
             toMigrate.should.be.empty;
             done();
           });
@@ -340,7 +354,7 @@ describe('klei-migrate', function () {
     it('should give an array with what to migrate up for given migration name', function (done) {
       migrate.create(function (err, name1) {
         migrate.create(function (err, name2) {
-          migrate.dry(name1, function (toMigrate) {
+          migrate.args([name1]).dry(function (toMigrate) {
             toMigrate.should.not.be.empty;
             toMigrate.length.should.equal(1);
             toMigrate[0].should.equal(name1);
@@ -373,47 +387,56 @@ describe('klei-migrate', function () {
     afterEach(resetJsonDb);
 
     it('should migrate existing migrations', function (done) {
-      migrate.template('table1.tpl', function (err) {
+      migrate.templatePath('table1.tpl').args(['Add table1']).create(function (err, name) {
         should.not.exist(err);
-        migrate.create('Add table1', function (err, name) {
+        migrate.run(function (err, migrated) {
           should.not.exist(err);
-          migrate.run(function (err, migrated) {
+          migrated.should.not.be.empty;
+          migrated[0].should.equal(name);
+          fs.readJson(join(__dirname, 'db.json'), function (err, db) {
             should.not.exist(err);
-            migrated.should.not.be.empty;
-            migrated[0].should.equal(name);
-            fs.readJson(join(__dirname, 'db.json'), function (err, db) {
-              should.not.exist(err);
-              db.table1.length.should.equal(3);
-              done();
-            });
+            db.table1.length.should.equal(3);
+            done();
           });
         });
       });
     });
 
     it('should be able to migrate a migration by name', function (done) {
-      migrate.template('table1.tpl', function (err) {
+      migrate.templatePath('table1.tpl').args(['Add table1']).create(function (err, name) {
         should.not.exist(err);
-        migrate.create('Add table1', function (err, name) {
+        migrate.limit(1).args([name]).run(function (err) {
           should.not.exist(err);
-          migrate.limit(1).run(name, function (err) {
+          fs.readJson(join(__dirname, 'db.json'), function (err, db) {
             should.not.exist(err);
-            fs.readJson(join(__dirname, 'db.json'), function (err, db) {
-              should.not.exist(err);
-              db.table1.length.should.equal(3);
-              done();
-            });
+            db.table1.length.should.equal(3);
+            done();
           });
         });
       });
     });
 
     it('should not migrate anything if given a non-existing name with limit', function (done) {
-      migrate.template('table1.tpl', function (err) {
+      migrate.templatePath('table1.tpl').args(['Add table1']).create(function (err, name) {
         should.not.exist(err);
-        migrate.create('Add table1', function (err, name) {
+        migrate.limit(1).args(['1313131313122_My_Non_Existing_Migration_Name.js']).run(function (err) {
           should.not.exist(err);
-          migrate.limit(1).run('1313131313122_My_Non_Existing_Migration_Name.js', function (err) {
+          fs.readJson(join(__dirname, 'db.json'), function (err, db) {
+            should.not.exist(err);
+            should.not.exist(db.table1);
+            done();
+          });
+        });
+      });
+    });
+
+    it('should be able to rollback (i.e. migrate down) migrated migrations', function (done) {
+      migrate.templatePath('table1.tpl').args(['Add table1']).create(function (err, name) {
+        should.not.exist(err);
+        migrate.args([]);
+        migrate.run(function (err) {
+          should.not.exist(err);
+          migrate.direction('down').run(function (err, migrated) {
             should.not.exist(err);
             fs.readJson(join(__dirname, 'db.json'), function (err, db) {
               should.not.exist(err);
@@ -425,36 +448,13 @@ describe('klei-migrate', function () {
       });
     });
 
-    it('should be able to rollback (i.e. migrate down) migrated migrations', function (done) {
-      migrate.template('table1.tpl', function (err) {
-        should.not.exist(err);
-        migrate.create('Add table1', function (err, name) {
-          should.not.exist(err);
-          migrate.run(function (err) {
-            should.not.exist(err);
-            migrate.direction('down').run(function (err) {
-              should.not.exist(err);
-              fs.readJson(join(__dirname, 'db.json'), function (err, db) {
-                should.not.exist(err);
-                should.not.exist(db.table1);
-                done();
-              });
-            });
-          });
-        });
-      });
-    });
-
     it('should give an error if the migration exceeds set time limit', function (done) {
-      migrate.template('timeout.tpl', function (err) {
+      migrate.templatePath('timeout.tpl').args(['Take time']).create(function (err, name) {
         should.not.exist(err);
-        migrate.create('Take time', function (err, name) {
-          should.not.exist(err);
-          migrate.timeout(30).run(function (err) {
-            should.exist(err);
-            err.message.should.equal('Timeout of 30 ms exceeded for migration: "' + name + '"');
-            done();
-          });
+        migrate.timeout(30).run(function (err) {
+          should.exist(err);
+          err.message.should.equal('Timeout of 30 ms exceeded for migration: "' + name + '"');
+          done();
         });
       });
     });
