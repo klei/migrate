@@ -1,6 +1,7 @@
 
 var should = require('chai').should(),
-    cli = require('../lib/cli');
+    cli = require('../lib/cli'),
+    join = require('path').join;
 
 describe('klei-migrate cli', function () {
   describe('init()', function () {
@@ -40,6 +41,12 @@ describe('klei-migrate cli', function () {
 
     it('should set migrate.args() to remaining arguments', function (done) {
       cli.init(['create', 'My', 'Super', 'Migration']).migrate.args().should.eql(['My', 'Super', 'Migration']);
+      done();
+    });
+
+    it('should set templatePath to --template', function (done) {
+      cli.migrate.cwd(__dirname);
+      cli.init(['create', '--template', 'table1.tpl', 'My', 'Super', 'Migration']).migrate.templatePath().should.equal(join(__dirname, 'table1.tpl'));
       done();
     });
   });
