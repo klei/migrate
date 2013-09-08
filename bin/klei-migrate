@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-var cli = require('../lib/cli');
+var cli = require('../lib/cli'),
+    reporter = require('../lib/reporter');
 
-cli.init().exec(function () {
-    console.log(arguments);
-    process.exit();
-});
+cli.init().reporter(reporter).exec();

@@ -74,4 +74,13 @@ describe('klei-migrate cli', function () {
       done();
     });
   });
+
+  describe('reporter()', function () {
+    it('should run the provided reporter with migrate as parameter', function (done) {
+      cli.reporter(function (mig) {
+        mig.should.equal(cli.migrate);
+        done();
+      });
+    });
+  });
 });

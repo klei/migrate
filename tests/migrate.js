@@ -314,13 +314,27 @@ describe('klei-migrate module', function () {
       });
     });
 
-    it('should only give the next migration when limited and given no name', function (done) {
+    it('should only give the next migration when limited to one and given no name', function (done) {
       migrate.create(function (err, name1) {
         migrate.create(function (err, name2) {
           migrate.limit(1).dry(function (toMigrate) {
             toMigrate.should.not.be.empty;
             toMigrate.length.should.equal(1);
             toMigrate[0].should.equal(name1);
+            done();
+          });
+        });
+      });
+    });
+
+    it('should only give the next two migrations when limited to two and given no name', function (done) {
+      migrate.create(function (err, name1) {
+        migrate.create(function (err, name2) {
+          migrate.limit(2).dry(function (toMigrate) {
+            toMigrate.should.not.be.empty;
+            toMigrate.length.should.equal(2);
+            toMigrate[0].should.equal(name1);
+            toMigrate[1].should.equal(name2);
             done();
           });
         });
@@ -457,78 +471,6 @@ describe('klei-migrate module', function () {
           done();
         });
       });
-    });
-  });
-
-  describe('on()', function () {
-    beforeEach(loadMigrate);
-
-    beforeEach(function (done) {
-      migrate.cwd(__dirname);
-      done();
-    });
-
-    afterEach(removeMigrations);
-
-    it('should have an output event that is subscribable', function (done) {
-      migrate.on('output', function (msg) {
-        msg.should.equal('Test output');
-        done();
-      });
-      migrate.output('Test output');
-    });
-
-    it('should have an output:<level> event that is triggered for only that level of message', function (done) {
-      migrate.on('output:info', function (msg) {
-        msg.should.equal('Info output');
-        done();
-      });
-      migrate.output('Test output');
-      migrate.output('Info output', 'info');
-    });
-
-    it('should have an error event that is triggered with err and heading for errors', function (done) {
-      migrate.on('error', function (err, heading) {
-        heading.should.equal('Oops!');
-        err.message.should.equal('That didn\'t go well...');
-        done();
-      });
-      migrate.error(new Error('That didn\'t go well...'), 'Oops!');
-    });
-  });
-
-  describe('info()', function () {
-    beforeEach(loadMigrate);
-
-    beforeEach(function (done) {
-      migrate.cwd(__dirname);
-      done();
-    });
-
-    afterEach(removeMigrations);
-
-    it('should trigger the output:info event', function (done) {
-      migrate.on('output:info', function (msg) {
-        msg.should.equal('lorem ipsum');
-        done();
-      });
-      migrate.info('lorem ipsum');
-    });
-
-    it('should trigger the output:debug event', function (done) {
-      migrate.on('output:debug', function (msg) {
-        msg.should.equal('lorem ipsum');
-        done();
-      });
-      migrate.debug('lorem ipsum');
-    });
-
-    it('should trigger the output:success event', function (done) {
-      migrate.on('output:success', function (msg) {
-        msg.should.equal('lorem ipsum');
-        done();
-      });
-      migrate.success('lorem ipsum');
     });
   });
 });
