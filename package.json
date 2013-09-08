@@ -1,8 +1,12 @@
 {
   "name": "klei-migrate",
-  "version": "0.1.2",
-  "description": "A migration tool... WIP",
+  "version": "0.2.0",
+  "description": "A database independent migration tool",
   "main": "index.js",
+  "keywords": [
+    "migrate",
+    "migration"
+  ],
   "dependencies": {
     "klei-fs": "~0.4.2",
     "nopt": "~2.1.2",
