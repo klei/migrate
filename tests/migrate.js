@@ -341,16 +341,16 @@ describe('klei-migrate module', function () {
       migrate.create(function (err, name1) {
         should.not.exist(err);
         setTimeout(function () {
-        migrate.create(function (err, name2) {
-          should.not.exist(err);
-          migrate.dry(function (toMigrate) {
-            toMigrate.should.not.be.empty;
-            toMigrate.length.should.equal(2);
-            toMigrate[0].should.equal(name1);
-            toMigrate[1].should.equal(name2);
-            done();
+          migrate.create(function (err, name2) {
+            should.not.exist(err);
+            migrate.dry(function (toMigrate) {
+              toMigrate.should.not.be.empty;
+              toMigrate.length.should.equal(2);
+              toMigrate[0].should.equal(name1);
+              toMigrate[1].should.equal(name2);
+              done();
+            });
           });
-        });
         }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
@@ -359,15 +359,15 @@ describe('klei-migrate module', function () {
       migrate.create(function (err, name1) {
         should.not.exist(err);
         setTimeout(function () {
-        migrate.create(function (err, name2) {
+          migrate.create(function (err, name2) {
             should.not.exist(err);
-          migrate.limit(1).dry(function (toMigrate) {
-            toMigrate.should.not.be.empty;
-            toMigrate.length.should.equal(1);
-            toMigrate[0].should.equal(name1);
-            done();
+            migrate.limit(1).dry(function (toMigrate) {
+              toMigrate.should.not.be.empty;
+              toMigrate.length.should.equal(1);
+              toMigrate[0].should.equal(name1);
+              done();
+            });
           });
-        });
         }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
@@ -376,16 +376,16 @@ describe('klei-migrate module', function () {
       migrate.create(function (err, name1) {
         should.not.exist(err);
         setTimeout(function () {
-        migrate.create(function (err, name2) {
+          migrate.create(function (err, name2) {
             should.not.exist(err);
-          migrate.limit(2).dry(function (toMigrate) {
-            toMigrate.should.not.be.empty;
-            toMigrate.length.should.equal(2);
-            toMigrate[0].should.equal(name1);
-            toMigrate[1].should.equal(name2);
-            done();
+            migrate.limit(2).dry(function (toMigrate) {
+              toMigrate.should.not.be.empty;
+              toMigrate.length.should.equal(2);
+              toMigrate[0].should.equal(name1);
+              toMigrate[1].should.equal(name2);
+              done();
+            });
           });
-        });
         }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
@@ -394,15 +394,15 @@ describe('klei-migrate module', function () {
       migrate.create(function (err, name1) {
         should.not.exist(err);
         setTimeout(function () {
-        migrate.create(function (err, name2) {
+          migrate.create(function (err, name2) {
             should.not.exist(err);
-          migrate.limit(1).args([name2]).dry(function (toMigrate) {
-            toMigrate.should.not.be.empty;
-            toMigrate.length.should.equal(1);
-            toMigrate[0].should.equal(name2);
-            done();
+            migrate.limit(1).args([name2]).dry(function (toMigrate) {
+              toMigrate.should.not.be.empty;
+              toMigrate.length.should.equal(1);
+              toMigrate[0].should.equal(name2);
+              done();
+            });
           });
-        });
         }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
@@ -411,13 +411,13 @@ describe('klei-migrate module', function () {
       migrate.create(function (err, name1) {
         should.not.exist(err);
         setTimeout(function () {
-        migrate.create(function (err, name2) {
+          migrate.create(function (err, name2) {
             should.not.exist(err);
-          migrate.limit(1).args(['lorem-ipsum']).dry(function (toMigrate) {
-            toMigrate.should.be.empty;
-            done();
+            migrate.limit(1).args(['lorem-ipsum']).dry(function (toMigrate) {
+              toMigrate.should.be.empty;
+              done();
+            });
           });
-        });
         }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
@@ -525,6 +525,83 @@ describe('klei-migrate module', function () {
         migrate.timeout(30).run(function (err) {
           should.exist(err);
           err.message.should.equal('Timeout of 30 ms exceeded for migration: "' + name + '"');
+          done();
+        });
+      });
+    });
+  });
+
+  // Params: ['branch1', 'branch2']
+  // 1. get all migrated migrations on 'branch1'
+  // 2. compare with the migrations existing on 'branch2'
+  // 3. take all migrations that does not exist on 'branch2'
+  //   a) checkout each migration
+  //   b) run each migration backwards
+  //   c) remove the cache for each migration
+  //   d) remove each migration
+  // 4. run all migrations on 'branch2'
+  describe('diff()', function () {
+    beforeEach(loadMigrate);
+
+    beforeEach(function (done) {
+      migrate.cwd(__dirname);
+      done();
+    });
+
+    it('should get what to migrate down or up when moving from one branch to another', function (done) {
+      migrate.env('test').directory('test-migrations');
+
+      migrate.diff(function (err, diff) {
+        should.not.exist(err);
+        should.exist(diff);
+        diff.length.should.equal(2);
+        diff[0].migration.should.equal('1378750994362_migration.js');
+        diff[0].direction.should.equal('down');
+        diff[1].migration.should.equal('1378750995515_migration.js');
+        diff[1].direction.should.equal('up');
+        done();
+      });
+    });
+  });
+
+  describe('postCheckout()', function () {
+    beforeEach(loadMigrate);
+
+    beforeEach(function (done) {
+      migrate.cwd(__dirname);
+      done();
+    });
+
+    afterEach(function (done) {
+      fs.unlink(join(__dirname, 'test-migrations', '1378750994362_migration.js'), function (err) {
+        if (err) {
+          done(err);
+          return;
+        }
+        fs.readFile(join(__dirname, 'simulated-branch', '.migrated.json'), 'utf8', function (err, contents) {
+          if (err) {
+            done(err);
+            return;
+          }
+          fs.writeFile(join(__dirname, 'test-migrations', '.migrated.json'), 'utf8', function (err) {
+            done(err);
+          });
+        });
+      });
+    });
+
+    it('should sync leaving branch to current branch', function (done) {
+      migrate.env('test').directory('test-migrations').git(require('./git-client'));
+
+      migrate.args(['simulated-branch']).postCheckout(function (err, migrated) {
+        should.not.exist(err);
+        migrated.length.should.equal(2);
+        migrated[0].migration.should.equal('1378750994362_migration.js');
+        migrated[0].direction.should.equal('down');
+        migrated[1].migration.should.equal('1378750995515_migration.js');
+        migrated[1].direction.should.equal('up');
+        migrate.dry(function (toMigrate) {
+          toMigrate.should.be.empty;
           done();
         });
       });
