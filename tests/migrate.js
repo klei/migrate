@@ -67,6 +67,27 @@ describe('klei-migrate module', function () {
     });
   });
 
+  describe('env()', function () {
+    beforeEach(loadMigrate);
+
+    it('should use process.env.NODE_ENV by default', function (done) {
+      process.env.NODE_ENV = 'test';
+      migrate.env().should.equal('test');
+      done();
+    });
+
+    it('should be set to "development" when NODE_ENV is missing', function (done) {
+      delete process.env.NODE_ENV;
+      migrate.env().should.equal('development');
+      done();
+    });
+
+    it('should act as both a getter and a setter (chainable)', function (done) {
+      migrate.env('test').env().should.equal('test');
+      done();
+    });
+  });
+
   describe('templatePath', function () {
     beforeEach(loadMigrate);
 
