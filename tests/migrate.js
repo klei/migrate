@@ -159,13 +159,14 @@ describe('klei-migrate module', function () {
     });
 
     after(function (done) {
-      removeMigrations('migs', function (err) {
-        if (err) {
-          done(err);
-          return;
+      var removed = 0;
+      var countDone = function (err) {
+        if (++removed === 2) {
+          done();
         }
-        removeMigrations('migrations', done);
-      });
+      };
+      removeMigrations('migs', countDone);
+      removeMigrations('migrations', countDone);
     });
 
     describe('without arguments', function () {
@@ -339,6 +340,7 @@ describe('klei-migrate module', function () {
     it('should give an array with what to migrate up by default', function (done) {
       migrate.create(function (err, name1) {
         should.not.exist(err);
+        setTimeout(function () {
         migrate.create(function (err, name2) {
           should.not.exist(err);
           migrate.dry(function (toMigrate) {
@@ -349,12 +351,16 @@ describe('klei-migrate module', function () {
             done();
           });
         });
+        }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
 
     it('should only give the next migration when limited to one and given no name', function (done) {
       migrate.create(function (err, name1) {
+        should.not.exist(err);
+        setTimeout(function () {
         migrate.create(function (err, name2) {
+            should.not.exist(err);
           migrate.limit(1).dry(function (toMigrate) {
             toMigrate.should.not.be.empty;
             toMigrate.length.should.equal(1);
@@ -362,12 +368,16 @@ describe('klei-migrate module', function () {
             done();
           });
         });
+        }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
 
     it('should only give the next two migrations when limited to two and given no name', function (done) {
       migrate.create(function (err, name1) {
+        should.not.exist(err);
+        setTimeout(function () {
         migrate.create(function (err, name2) {
+            should.not.exist(err);
           migrate.limit(2).dry(function (toMigrate) {
             toMigrate.should.not.be.empty;
             toMigrate.length.should.equal(2);
@@ -376,12 +386,16 @@ describe('klei-migrate module', function () {
             done();
           });
         });
+        }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
 
     it('should only give one migration with given name when limited and migratable', function (done) {
       migrate.create(function (err, name1) {
+        should.not.exist(err);
+        setTimeout(function () {
         migrate.create(function (err, name2) {
+            should.not.exist(err);
           migrate.limit(1).args([name2]).dry(function (toMigrate) {
             toMigrate.should.not.be.empty;
             toMigrate.length.should.equal(1);
@@ -389,17 +403,22 @@ describe('klei-migrate module', function () {
             done();
           });
         });
+        }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
 
     it('should give an empty array when given non-migratable name and limited', function (done) {
       migrate.create(function (err, name1) {
+        should.not.exist(err);
+        setTimeout(function () {
         migrate.create(function (err, name2) {
+            should.not.exist(err);
           migrate.limit(1).args(['lorem-ipsum']).dry(function (toMigrate) {
             toMigrate.should.be.empty;
             done();
           });
         });
+        }, 1); // Avoid creating two migrations at the same ms (the test randomly fails otherwise)
       });
     });
 
