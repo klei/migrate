@@ -61,6 +61,7 @@ $ klei-migrate dry [options] [arguments]
 * `--down` or `-d` - If provided forces an down migration
 * `--limit` or `-l` - Limits number of migrations to run to given number
 * `--one` - The same as `--limit 1`
+* `--env` or `-e` - Set environment name
 
 **Arguments:**
 
@@ -82,6 +83,7 @@ $ klei-migrate run [options] [arguments]
 * `--limit` or `-l` - Limits number of migrations to run to given number
 * `--one` - The same as `--limit 1`
 * `--timeout` or `-t` - Limit migration execution timeout (per migration) to given number in seconds
+* `--env` or `-e` - Set environment name
 
 **Arguments:**
 

@@ -16,6 +16,12 @@ describe('klei-migrate cli', function () {
       done();
     });
 
+    it('should set env to the provided --env or -e', function (done) {
+      cli.init(['--env', 'test']).migrate.env().should.equal('test');
+      cli.init(['-e', 'stage']).migrate.env().should.equal('stage');
+      done();
+    });
+
     it('should set timeout to the provided --timeout or -t converted from seconds to ms', function (done) {
       cli.init(['--timeout', '10']).migrate.timeout().should.equal(10000);
       cli.init(['-t', '5']).migrate.timeout().should.equal(5000);
