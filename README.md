@@ -90,6 +90,8 @@ $ klei-migrate run [options] [arguments]
 * `name` - Any given extra parameters is used to limit the migrations to run by name
   * If combined with `--one` only the migration with the given name is run, even though it's not the next in line
 
-## Stored migration progress
+## Stored migration progress/history
 
 Which migrations that has been run is stored in `migrations/.migrated.json`, so be sure to add it to your `.gitignore`.
+
+The `.migrated.json` file takes the current environment name into account, so that you can have e.g. a separate test database with its own migration history.

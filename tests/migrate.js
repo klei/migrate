@@ -319,6 +319,23 @@ describe('klei-migrate module', function () {
       });
     });
 
+    it('should take env into account when checking what to migrate', function (done) {
+      migrate.create(function (err, name) {
+        should.not.exist(err);
+        migrate.run(function (err, migrated) {
+          should.not.exist(err);
+          migrated.length.should.equal(1);
+          migrated[0].should.equal(name);
+          migrate.env('test').dry(function (toMigrate) {
+            toMigrate.should.not.be.empty;
+            toMigrate.length.should.equal(1);
+            toMigrate[0].should.equal(name);
+            done();
+          });
+        });
+      });
+    });
+
     it('should give an array with what to migrate up by default', function (done) {
       migrate.create(function (err, name1) {
         should.not.exist(err);
