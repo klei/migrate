@@ -1,6 +1,18 @@
 klei-migrate
 ==================
 
+## Features
+
+* Database independent migrations
+* Can be used:
+   * programatically as a local node module
+   * from command line
+   * as a gruntplugin with [grunt-klei-migrate](https://github.com/klei-dev/grunt-klei-migrate) for [Grunt](http://gruntjs.com/)
+* Handling different migration versions in different branches with:
+   * automatic migration synchronization when used as a post-checkout hook for git
+* Environment dependent migration history
+   * e.g. have a separate test database with its own migration history
+
 ## Installation
 
 To use from command line:
@@ -89,6 +101,62 @@ $ klei-migrate run [options] [arguments]
 
 * `name` - Any given extra parameters is used to limit the migrations to run by name
   * If combined with `--one` only the migration with the given name is run, even though it's not the next in line
+
+### `sync` - Manual sync after switching branch
+
+Reverts all migrations from provided branch that does not exist in current branch,
+and migrates all unmigrated migrations in current branch *(used internally for `post-checkout` command, see below)*.
+
+```bash
+$ klei-migrate sync [arguments]
+```
+
+**Options:**
+
+* `--timeout` or `-t` - Limit migration execution timeout (per migration) to given number in seconds
+* `--env` or `-e` - Set environment name
+
+**Arguments:**
+
+* `fromBranch` - The branch where `klei-migrate` should look for migrations to migrate down
+
+### `post-checkout` - Automatic sync after switching branch (if used as git hook)
+
+**How to use as a git checkout hook:**
+
+Create a file `.git/hooks/post-checkout` with the following contents:
+
+If `klei-migrate` is installed globally:
+
+```bash
+#!/usr/bin/env sh
+klei-migrate post-checkout "$@"
+```
+
+If installed as a local module:
+
+```bash
+#!/usr/bin/env sh
+node_modules/.bin/klei-migrate post-checkout "$@"
+```
+
+Reverts all migrations from provided branch that does not exist in current branch,
+and migrates all unmigrated migrations in current branch *(used internally for `post-checkout` command, see below)*.
+
+```bash
+$ klei-migrate post-checkout [arguments]
+```
+
+**Options:**
+
+* `--timeout` or `-t` - Limit migration execution timeout (per migration) to given number in seconds
+* `--env` or `-e` - Set environment name
+
+**Arguments:**
+
+* `fromRef` - *Set by git* The git hash for the branch where `klei-migrate` should look for migrations to migrate down
+* `toRef` - *Set by git* The current branch git hash
+* `flag` - *Set by git* Is set to `1` for a branch checkout and `0` on a file checkout
 
 ## Stored migration progress/history
 
