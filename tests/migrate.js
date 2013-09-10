@@ -614,5 +614,82 @@ describe('klei-migrate module', function () {
         });
       });
     });
+
+    it('should give an error if not at least one argument is provided', function (done) {
+      migrate.env('test').directory('test-migrations').git(require('./git-client'));
+      migrate.sync(function (err, migrated) {
+        should.exist(err);
+        err.message.should.equal('Missing argument `fromBranch`');
+        done();
+      });
+    });
+  });
+
+  describe('postCheckout()', function () {
+    beforeEach(loadMigrate);
+
+    beforeEach(function (done) {
+      migrate.cwd(__dirname);
+      done();
+    });
+
+    afterEach(function (done) {
+      fs.readFile(join(__dirname, 'simulated-branch', '.migrated.json'), 'utf8', function (err, contents) {
+        if (err) {
+          done(err);
+          return;
+        }
+        fs.writeFile(join(__dirname, 'test-migrations', '.migrated.json'), contents, 'utf8', function (err) {
+          done(err);
+        });
+      });
+    });
+
+    it('should sync migrations from leaving branch with branch we are going to', function (done) {
+      migrate.env('test').directory('test-migrations').git(require('./git-client'));
+      migrate.args(['abcd123', 'efgh456', '1']).postCheckout(function (err, migrated) {
+        should.not.exist(err);
+        migrated.length.should.equal(4);
+        migrated[0].migration.should.equal('1378800931011_migration.js');
+        migrated[0].direction.should.equal('down');
+        migrated[1].migration.should.equal('1378750994362_migration.js');
+        migrated[1].direction.should.equal('down');
+        migrated[2].migration.should.equal('1378750995515_migration.js');
+        migrated[2].direction.should.equal('up');
+        migrated[3].migration.should.equal('1378800931974_migration.js');
+        migrated[3].direction.should.equal('up');
+        migrate.dry(function (toMigrate) {
+          toMigrate.should.be.empty;
+          done();
+        });
+      });
+    });
+
+    it('should give an error if not at least three arguments is provided', function (done) {
+      migrate.env('test').directory('test-migrations').git(require('./git-client'));
+      migrate.postCheckout(function (err, migrated) {
+        should.exist(err);
+        err.message.should.equal('klei-migrate post-checkout requires three parameters!');
+        done();
+      });
+    });
+
+    it('should not do anything if leaving branch and current branch is the same', function (done) {
+      migrate.env('test').directory('test-migrations').git(require('./git-client'));
+      migrate.args(['abcd123', 'abcd123', '1']).postCheckout(function (err, migrated) {
+        should.not.exist(err);
+        migrated.should.be.empty;
+        done();
+      });
+    });
+
+    it('should not do anything if it is not a branch checkout (i.e. 3rd argument is falsy or "0")', function (done) {
+      migrate.env('test').directory('test-migrations').git(require('./git-client'));
+      migrate.args(['abcd123', 'efgh456', '0']).postCheckout(function (err, migrated) {
+        should.not.exist(err);
+        migrated.should.be.empty;
+        done();
+      });
+    });
   });
 });

@@ -21,3 +21,11 @@ exports.checkout = function (branch, file, cb) {
 exports.resetHead = function (file, cb) {
   cb();
 };
+
+exports.branchFromHash = function (hash, cb) {
+  if (hash === 'abcd123') {
+    cb(null, 'simulated-branch');
+  } else {
+    cb(new Error('Unknown hash...'));
+  }
+};
