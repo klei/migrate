@@ -7,11 +7,12 @@ var fs = require('klei-fs'),
     path = require('path');
 
 exports.checkout = function (branch, file, cb) {
-  fs.readFile(path.join(__dirname, branch, file), 'utf8', function (err, contents) {
+  var base = path.basename(file);
+  fs.readFile(path.join(__dirname, branch, base), 'utf8', function (err, contents) {
     if (err) {
       cb(err);
     } else {
-      fs.writeFile(path.join(__dirname, 'test-migrations', file), contents, 'utf8', function (err) {
+      fs.writeFile(path.join(__dirname, 'test-migrations', base), contents, 'utf8', function (err) {
         cb(err);
       });
     }
