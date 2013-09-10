@@ -1,6 +1,12 @@
 klei-migrate changelog
 ========================
 
+## v.0.4
+
+### Release v.0.4.0
+
+* Adding `sync` and `post-checkout` commands for handling branching and migrations
+
 ## v.0.3
 
 ### Hotfix v.0.3.2

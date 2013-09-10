@@ -1,11 +1,13 @@
 {
   "name": "klei-migrate",
-  "version": "0.3.2",
-  "description": "A database independent migration tool",
+  "version": "0.4.0",
+  "description": "A database independent migration tool which support different migrations in different git branches",
   "main": "index.js",
   "keywords": [
     "migrate",
-    "migration"
+    "migration",
+    "branching",
+    "git"
   ],
   "dependencies": {
     "klei-fs": "~0.4.2",
