@@ -326,11 +326,13 @@ describe('klei-migrate module', function () {
         migrate.run(function (err, migrated) {
           should.not.exist(err);
           migrated.length.should.equal(1);
-          migrated[0].should.equal(name);
+          migrated[0].migration.should.equal(name);
+          migrated[0].direction.should.equal('up');
           migrate.env('test').dry(function (toMigrate) {
             toMigrate.should.not.be.empty;
             toMigrate.length.should.equal(1);
-            toMigrate[0].should.equal(name);
+            toMigrate[0].migration.should.equal(name);
+            toMigrate[0].direction.should.equal('up');
             done();
           });
         });
@@ -346,8 +348,10 @@ describe('klei-migrate module', function () {
             migrate.dry(function (toMigrate) {
               toMigrate.should.not.be.empty;
               toMigrate.length.should.equal(2);
-              toMigrate[0].should.equal(name1);
-              toMigrate[1].should.equal(name2);
+              toMigrate[0].migration.should.equal(name1);
+              toMigrate[0].direction.should.equal('up');
+              toMigrate[1].migration.should.equal(name2);
+              toMigrate[1].direction.should.equal('up');
               done();
             });
           });
@@ -364,7 +368,8 @@ describe('klei-migrate module', function () {
             migrate.limit(1).dry(function (toMigrate) {
               toMigrate.should.not.be.empty;
               toMigrate.length.should.equal(1);
-              toMigrate[0].should.equal(name1);
+              toMigrate[0].migration.should.equal(name1);
+              toMigrate[0].direction.should.equal('up');
               done();
             });
           });
@@ -381,8 +386,10 @@ describe('klei-migrate module', function () {
             migrate.limit(2).dry(function (toMigrate) {
               toMigrate.should.not.be.empty;
               toMigrate.length.should.equal(2);
-              toMigrate[0].should.equal(name1);
-              toMigrate[1].should.equal(name2);
+              toMigrate[0].migration.should.equal(name1);
+              toMigrate[0].direction.should.equal('up');
+              toMigrate[1].migration.should.equal(name2);
+              toMigrate[1].direction.should.equal('up');
               done();
             });
           });
@@ -399,7 +406,8 @@ describe('klei-migrate module', function () {
             migrate.limit(1).args([name2]).dry(function (toMigrate) {
               toMigrate.should.not.be.empty;
               toMigrate.length.should.equal(1);
-              toMigrate[0].should.equal(name2);
+              toMigrate[0].migration.should.equal(name2);
+              toMigrate[0].direction.should.equal('up');
               done();
             });
           });
@@ -428,7 +436,8 @@ describe('klei-migrate module', function () {
           migrate.args([name1]).dry(function (toMigrate) {
             toMigrate.should.not.be.empty;
             toMigrate.length.should.equal(1);
-            toMigrate[0].should.equal(name1);
+            toMigrate[0].migration.should.equal(name1);
+            toMigrate[0].direction.should.equal('up');
             done();
           });
         });
@@ -463,7 +472,8 @@ describe('klei-migrate module', function () {
         migrate.run(function (err, migrated) {
           should.not.exist(err);
           migrated.should.not.be.empty;
-          migrated[0].should.equal(name);
+          migrated[0].migration.should.equal(name);
+          migrated[0].direction.should.equal('up');
           fs.readJson(join(__dirname, 'db.json'), function (err, db) {
             should.not.exist(err);
             db.table1.length.should.equal(3);
@@ -476,8 +486,11 @@ describe('klei-migrate module', function () {
     it('should be able to migrate a migration by name', function (done) {
       migrate.templatePath('table1.tpl').args(['Add table1']).create(function (err, name) {
         should.not.exist(err);
-        migrate.limit(1).args([name]).run(function (err) {
+        migrate.limit(1).args([name]).run(function (err, migrated) {
           should.not.exist(err);
+          migrated.length.should.equal(1);
+          migrated[0].migration.should.equal(name);
+          migrated[0].direction.should.equal('up');
           fs.readJson(join(__dirname, 'db.json'), function (err, db) {
             should.not.exist(err);
             db.table1.length.should.equal(3);
@@ -490,8 +503,9 @@ describe('klei-migrate module', function () {
     it('should not migrate anything if given a non-existing name with limit', function (done) {
       migrate.templatePath('table1.tpl').args(['Add table1']).create(function (err, name) {
         should.not.exist(err);
-        migrate.limit(1).args(['1313131313122_My_Non_Existing_Migration_Name.js']).run(function (err) {
+        migrate.limit(1).args(['1313131313122_My_Non_Existing_Migration_Name.js']).run(function (err, migrated) {
           should.not.exist(err);
+          migrated.should.be.empty;
           fs.readJson(join(__dirname, 'db.json'), function (err, db) {
             should.not.exist(err);
             should.not.exist(db.table1);
@@ -509,6 +523,9 @@ describe('klei-migrate module', function () {
           should.not.exist(err);
           migrate.direction('down').run(function (err, migrated) {
             should.not.exist(err);
+            migrated.length.should.equal(1);
+            migrated[0].migration.should.equal(name);
+            migrated[0].direction.should.equal('down');
             fs.readJson(join(__dirname, 'db.json'), function (err, db) {
               should.not.exist(err);
               should.not.exist(db.table1);
@@ -531,15 +548,6 @@ describe('klei-migrate module', function () {
     });
   });
 
-  // Params: ['branch1', 'branch2']
-  // 1. get all migrated migrations on 'branch1'
-  // 2. compare with the migrations existing on 'branch2'
-  // 3. take all migrations that does not exist on 'branch2'
-  //   a) checkout each migration
-  //   b) run each migration backwards
-  //   c) remove the cache for each migration
-  //   d) remove each migration
-  // 4. run all migrations on 'branch2'
   describe('diff()', function () {
     beforeEach(loadMigrate);
 
@@ -551,20 +559,23 @@ describe('klei-migrate module', function () {
     it('should get what to migrate down or up when moving from one branch to another', function (done) {
       migrate.env('test').directory('test-migrations');
 
-      migrate.diff(function (err, diff) {
-        should.not.exist(err);
+      migrate.diff(function (diff) {
         should.exist(diff);
-        diff.length.should.equal(2);
-        diff[0].migration.should.equal('1378750994362_migration.js');
+        diff.length.should.equal(4);
+        diff[0].migration.should.equal('1378800931011_migration.js');
         diff[0].direction.should.equal('down');
-        diff[1].migration.should.equal('1378750995515_migration.js');
-        diff[1].direction.should.equal('up');
+        diff[1].migration.should.equal('1378750994362_migration.js');
+        diff[1].direction.should.equal('down');
+        diff[2].migration.should.equal('1378750995515_migration.js');
+        diff[2].direction.should.equal('up');
+        diff[3].migration.should.equal('1378800931974_migration.js');
+        diff[3].direction.should.equal('up');
         done();
       });
     });
   });
 
-  describe('postCheckout()', function () {
+  describe('sync()', function () {
     beforeEach(loadMigrate);
 
     beforeEach(function (done) {
@@ -573,33 +584,30 @@ describe('klei-migrate module', function () {
     });
 
     afterEach(function (done) {
-      fs.unlink(join(__dirname, 'test-migrations', '1378750994362_migration.js'), function (err) {
+      fs.readFile(join(__dirname, 'simulated-branch', '.migrated.json'), 'utf8', function (err, contents) {
         if (err) {
           done(err);
           return;
         }
-        fs.readFile(join(__dirname, 'simulated-branch', '.migrated.json'), 'utf8', function (err, contents) {
-          if (err) {
-            done(err);
-            return;
-          }
-          fs.writeFile(join(__dirname, 'test-migrations', '.migrated.json'), 'utf8', function (err) {
-            done(err);
-          });
+        fs.writeFile(join(__dirname, 'test-migrations', '.migrated.json'), contents, 'utf8', function (err) {
+          done(err);
         });
       });
     });
 
-    it('should sync leaving branch to current branch', function (done) {
+    it('should sync migrations from given branch with current branch', function (done) {
       migrate.env('test').directory('test-migrations').git(require('./git-client'));
-
-      migrate.args(['simulated-branch']).postCheckout(function (err, migrated) {
+      migrate.args(['simulated-branch']).sync(function (err, migrated) {
         should.not.exist(err);
-        migrated.length.should.equal(2);
-        migrated[0].migration.should.equal('1378750994362_migration.js');
+        migrated.length.should.equal(4);
+        migrated[0].migration.should.equal('1378800931011_migration.js');
         migrated[0].direction.should.equal('down');
-        migrated[1].migration.should.equal('1378750995515_migration.js');
-        migrated[1].direction.should.equal('up');
+        migrated[1].migration.should.equal('1378750994362_migration.js');
+        migrated[1].direction.should.equal('down');
+        migrated[2].migration.should.equal('1378750995515_migration.js');
+        migrated[2].direction.should.equal('up');
+        migrated[3].migration.should.equal('1378800931974_migration.js');
+        migrated[3].direction.should.equal('up');
         migrate.dry(function (toMigrate) {
           toMigrate.should.be.empty;
           done();
