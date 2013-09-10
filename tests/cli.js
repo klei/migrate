@@ -74,6 +74,8 @@ describe('klei-migrate cli', function () {
       cli.command('run').command().should.equal('run');
       cli.command('dry').command().should.equal('dry');
       cli.command('create').command().should.equal('create');
+      cli.command('sync').command().should.equal('sync');
+      cli.command('post-checkout').command().should.equal('post-checkout');
       done();
     });
 
