@@ -10,6 +10,7 @@ function loadMigrate (cb) {
   cacheName = require.resolve('../lib/migrate');
   cacheName && delete require.cache[cacheName];
   migrate = require('../.');
+  delete process.env.NODE_ENV;
   cb && cb();
 }
 
@@ -79,6 +80,13 @@ describe('klei-migrate module', function () {
     it('should be set to "development" when NODE_ENV is missing', function (done) {
       delete process.env.NODE_ENV;
       migrate.env().should.equal('development');
+      done();
+    });
+
+    it('should set process.env.NODE_ENV to provided env', function (done) {
+      delete process.env.NODE_ENV;
+      migrate.env('test');
+      process.env.NODE_ENV.should.equal('test');
       done();
     });
 

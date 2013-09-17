@@ -3,6 +3,10 @@ klei-migrate changelog
 
 ## v.0.4
 
+### Hotfix v.0.4.1
+
+* FIX: also setting process.env.NODE_ENV when setting environment
+
 ### Release v.0.4.0
 
 * Adding `sync` and `post-checkout` commands for handling branching and migrations
