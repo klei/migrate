@@ -12,6 +12,8 @@ klei-migrate
    * automatic migration synchronization when used as a post-checkout hook for git
 * Environment dependent migration history
    * e.g. have a separate test database with its own migration history
+* Write migrations in coffee-script
+   * N.B. klei-migrate does not depend on coffee-script itself, your project must have the module installed for it to work
 
 ## Installation
 
@@ -58,6 +60,7 @@ The generated name will be: `<Unix Timestamp>_migration.js`.
 **Options:**
 
 * `--template` - Can be used to set path to the template to use when creating the migration
+* `--coffee` - If set the migration file created will have `.coffee` extension instead of `.js`
 
 ### `dry` or `status` - Show what is possible to migrate
 
@@ -74,6 +77,7 @@ $ klei-migrate dry [options] [arguments]
 * `--limit` or `-l` - Limits number of migrations to run to given number
 * `--one` - The same as `--limit 1`
 * `--env` or `-e` - Set environment name
+* `--coffee` - Activate coffee-script mode
 
 **Arguments:**
 
@@ -96,6 +100,7 @@ $ klei-migrate run [options] [arguments]
 * `--one` - The same as `--limit 1`
 * `--timeout` or `-t` - Limit migration execution timeout (per migration) to given number in seconds
 * `--env` or `-e` - Set environment name
+* `--coffee` - Makes klei-migrate look for migration files with `.coffee` extension instead of `.js`
 
 **Arguments:**
 
@@ -115,6 +120,7 @@ $ klei-migrate sync [arguments]
 
 * `--timeout` or `-t` - Limit migration execution timeout (per migration) to given number in seconds
 * `--env` or `-e` - Set environment name
+* `--coffee` - Run coffee-script migrations
 
 **Arguments:**
 
@@ -151,6 +157,7 @@ $ klei-migrate post-checkout [arguments]
 
 * `--timeout` or `-t` - Limit migration execution timeout (per migration) to given number in seconds
 * `--env` or `-e` - Set environment name
+* `--coffee` - Run coffee-script migrations
 
 **Arguments:**
 

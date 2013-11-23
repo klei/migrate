@@ -1,6 +1,12 @@
 klei-migrate changelog
 ========================
 
+## v.0.5
+
+### Release v.0.5.0
+
+* Adding support for coffee-script via `--coffee` CLI option
+
 ## v.0.4
 
 ### Hotfix v.0.4.2
