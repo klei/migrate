@@ -4,6 +4,15 @@ var should = require('chai').should(),
     join = require('path').join;
 
 describe('klei-migrate cli', function () {
+  beforeEach(function (done) {
+    // Reset some options:
+    cli.migrate.limit(0);
+    cli.migrate.coffee(false);
+    cli.migrate.env('development');
+    cli.migrate.timeout(30000);
+    done();
+  });
+
   describe('init()', function () {
     it('should set limit to 1 if --one is provided', function (done) {
       cli.init(['--one']).migrate.limit().should.equal(1);
@@ -17,6 +26,17 @@ describe('klei-migrate cli', function () {
 
     it('should not set coffee-script mode if --coffee is not provided', function (done) {
       cli.init([]).migrate.coffee().should.equal(false);
+      done();
+    });
+
+    it('should load options from config file if it exists', function (done) {
+      cli.migrate.cwd(join(__dirname, 'config-migrations'));
+      cli.init([]);
+      cli.migrate.coffee().should.equal(true);
+      cli.migrate.templatePath().should.equal(join(__dirname, 'config-migrations', '.migration.tpl.coffee'));
+      cli.migrate.timeout().should.equal(600000);
+      cli.migrate.env().should.equal('stage');
+      cli.migrate.directory().should.equal(join(__dirname, 'config-migrations', 'migs'));
       done();
     });
 

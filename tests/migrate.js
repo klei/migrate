@@ -74,6 +74,29 @@ describe('klei-migrate module', function () {
     });
   });
 
+  describe('config()', function () {
+    beforeEach(loadMigrate);
+
+    it('should use process.cwd()+"/klei-migrate.json" by default', function (done) {
+      migrate.config().should.equal(join(process.cwd(), 'klei-migrate.json'));
+      done();
+    });
+  });
+
+  describe('loadConfig()', function () {
+    beforeEach(loadMigrate);
+
+    it('should set klei-migrate options from config file if it exists', function (done) {
+      migrate.cwd(join(__dirname, 'config-migrations')).loadConfig();
+      migrate.directory().should.equal(join(__dirname, 'config-migrations', 'migs'));
+      migrate.env().should.equal('stage');
+      migrate.timeout().should.equal(600000);
+      migrate.coffee().should.equal(true);
+      migrate.templatePath().should.equal(join(__dirname, 'config-migrations', '.migration.tpl.coffee'));
+      done();
+    });
+  });
+
   describe('env()', function () {
     beforeEach(loadMigrate);
 

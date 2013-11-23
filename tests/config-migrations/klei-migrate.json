@@ -1,0 +1,7 @@
+{
+  "directory": "migs",
+  "template": ".migration.tpl.coffee",
+  "coffee": true,
+  "env": "stage",
+  "timeout": 600
+}
