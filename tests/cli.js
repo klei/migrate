@@ -10,6 +10,16 @@ describe('klei-migrate cli', function () {
       done();
     });
 
+    it('should set coffee-script mode if --coffee is provided', function (done) {
+      cli.init(['--coffee']).migrate.coffee().should.equal(true);
+      done();
+    });
+
+    it('should not set coffee-script mode if --coffee is not provided', function (done) {
+      cli.init([]).migrate.coffee().should.equal(false);
+      done();
+    });
+
     it('should set limit to the provided --limit or -l', function (done) {
       cli.init(['--limit', '10']).migrate.limit().should.equal(10);
       cli.init(['-l', '5']).migrate.limit().should.equal(5);

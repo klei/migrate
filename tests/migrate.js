@@ -40,6 +40,12 @@ function removeMigrations (dir, cb) {
   });
 }
 
+function removeMigrationStatus (dir, cb) {
+  fs.unlink(join(__dirname, dir, '.migrated.json'), function (err) {
+    cb(err);
+  });
+}
+
 function resetJsonDb (cb) {
   fs.writeFile(join(__dirname, 'db.json'), '{}', 'utf8', function (err) {
     cb(err);
@@ -202,6 +208,19 @@ describe('klei-migrate module', function () {
         });
       });
     });
+
+    describe('with arguments (and coffee is set)', function () {
+      it('should create <cwd>/<directory>/<timestamp>_<argument_snake_cased>.coffee', function (done) {
+        migrate.args(['My', 'Super', 'Migration']).coffee(true).create(function (err, name) {
+          should.not.exist(err);
+          name.should.match(/^[0-9]{13}_My_Super_Migration.coffee$/);
+          fs.exists(join(__dirname, 'migrations', name), function (exists) {
+            exists.should.be.true;
+            done();
+          });
+        });
+      });
+    });
   });
 
   describe('direction()', function () {
@@ -226,6 +245,20 @@ describe('klei-migrate module', function () {
       should.Throw(function () {
         migrate.direction('sideways');
       });
+      done();
+    });
+  });
+
+  describe('coffee()', function () {
+    beforeEach(loadMigrate);
+
+    it('should default to `false`', function (done) {
+      migrate.coffee().should.equal(false);
+      done();
+    });
+
+    it('should set coffee-script mode', function (done) {
+      migrate.coffee(true).coffee().should.equal(true);
       done();
     });
   });
@@ -367,6 +400,19 @@ describe('klei-migrate module', function () {
       });
     });
 
+    it('should give an array with what to migrate up by default (for coffee-script mode as well)', function (done) {
+      migrate.coffee(true).create(function (err, name) {
+        should.not.exist(err);
+        migrate.dry(function (toMigrate) {
+          toMigrate.should.not.be.empty;
+          toMigrate.length.should.equal(1);
+          toMigrate[0].migration.should.equal(name);
+          toMigrate[0].direction.should.equal('up');
+          done();
+        });
+      });
+    });
+
     it('should only give the next migration when limited to one and given no name', function (done) {
       migrate.create(function (err, name1) {
         should.not.exist(err);
@@ -487,6 +533,22 @@ describe('klei-migrate module', function () {
             db.table1.length.should.equal(3);
             done();
           });
+        });
+      });
+    });
+
+    describe('run for coffee-script migrations', function () {
+      after(function (done) {
+        removeMigrationStatus('coffee-migrations', done);
+      });
+
+      it('should migrate existing migrations (even coffee-script migrations)', function (done) {
+        migrate.coffee(true).directory(join(__dirname, 'coffee-migrations')).run(function (err, migrated) {
+          should.not.exist(err);
+          migrated.should.not.be.empty;
+          migrated[0].migration.should.equal('1385229494168_migration.coffee');
+          migrated[0].direction.should.equal('up');
+          done();
         });
       });
     });

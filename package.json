@@ -16,7 +16,8 @@
   },
   "devDependencies": {
     "chai": "~1.7.2",
-    "mocha": "~1.12.1"
+    "mocha": "~1.12.1",
+    "coffee-script": "~1.6.3"
   },
   "scripts": {
     "test": "node_modules/.bin/mocha -R spec tests/"
