@@ -1,6 +1,12 @@
 klei-migrate changelog
 ========================
 
+## v.0.6
+
+### Release v.0.6.0
+
+* Adding support for using a configuration file (klei-migrate.json) with default options for klei-migrate
+
 ## v.0.5
 
 ### Release v.0.5.0

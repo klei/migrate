@@ -14,6 +14,8 @@ klei-migrate
    * e.g. have a separate test database with its own migration history
 * Write migrations in coffee-script
    * N.B. klei-migrate does not depend on coffee-script itself, your project must have the module installed for it to work
+* Migration template (used when creating new migrations)
+   * Can be set in a `klei-migrate.json` config file in cwd when running klei-migrate
 
 ## Installation
 
@@ -33,6 +35,30 @@ And then:
 
 ```javascript
 var migrate = require('klei-migrate');
+```
+
+## Configuration
+
+klei-migrate looks for a `klei-migrate.json` configuration file in cwd (current working directory) when it is run.
+
+The configuration options that can be set via the `klei-migrate.json` is:
+
+* `template` - Path to template to use when creating new migrations (a path relative to the config-file location)
+* `timeout` - Set default timeout for all migrations in seconds
+* `env` - Set default environment when running migrations
+* `directory` - Set directory where you have your migration files (and the `.migrated.json` status file)
+* `coffee` - Set default coffee-script mode
+
+**Example file**:
+
+```json
+{
+  "directory": "migs",
+  "template": ".migration.tpl.coffee",
+  "coffee": true,
+  "env": "stage",
+  "timeout": 600
+}
 ```
 
 ## Commands
