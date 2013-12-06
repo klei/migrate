@@ -3,6 +3,10 @@ klei-migrate changelog
 
 ## v.0.6
 
+### Hotfix v.0.6.1
+
+* FIX: internal property `reporter` shouldn't have the same name as its setter function
+
 ### Release v.0.6.0
 
 * Adding support for using a configuration file (klei-migrate.json) with default options for klei-migrate
