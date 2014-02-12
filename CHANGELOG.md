@@ -25,7 +25,7 @@ klei-migrate changelog
 
 ### Hotfix v.0.4.2
 
-* Adding migrate:init event, see [#2](https://github.com/klei-dev/migrate/pull/2)
+* Adding migrate:init event, see [#2](https://github.com/klei/migrate/pull/2)
 
 ### Hotfix v.0.4.1
 

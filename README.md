@@ -7,7 +7,7 @@ klei-migrate
 * Can be used:
    * programatically as a local node module
    * from command line
-   * as a gruntplugin with [grunt-klei-migrate](https://github.com/klei-dev/grunt-klei-migrate) for [Grunt](http://gruntjs.com/)
+   * as a gruntplugin with [grunt-klei-migrate](https://github.com/klei/grunt-klei-migrate) for [Grunt](http://gruntjs.com/)
 * Handling different migration versions in different branches with:
    * automatic migration synchronization when used as a post-checkout hook for git
 * Environment dependent migration history
