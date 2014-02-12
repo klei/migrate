@@ -3,6 +3,10 @@ klei-migrate changelog
 
 ## v.0.6
 
+### Hotfix v.0.6.2
+
+* Adding Coffee Script 1.7 support, see [#4](https://github.com/klei/migrate/pull/4)
+
 ### Hotfix v.0.6.1
 
 * FIX: internal property `reporter` shouldn't have the same name as its setter function
